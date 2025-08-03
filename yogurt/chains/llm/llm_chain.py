@@ -1,8 +1,8 @@
 from typing import Any, List
 
-from yogurt.chains.base import BaseChain
-from yogurt.llms.base.llm import BaseLLM
-from yogurt.prompts.prompt_template.prompt_template import BasePromptTemplate
+from yogurt.chains import BaseChain
+from yogurt.llms import BaseLLM
+from yogurt.prompts.prompt_templates import BasePromptTemplate
 from yogurt.callback_handlers.base import BaseCallbackHandler
 
 

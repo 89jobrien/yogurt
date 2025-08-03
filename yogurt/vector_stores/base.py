@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from yogurt.documents.base import DocumentList
 
 
-class IVectorStore(ABC):
+class BaseVectorStore(ABC):
     """Interface for storing and retrieving embedded documents."""
 
     @abstractmethod
