@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
+
 
 class BaseChain(ABC):
     """Base interface for all chains."""
@@ -7,10 +8,8 @@ class BaseChain(ABC):
     @abstractmethod
     def run(self, **kwargs: Any) -> Any:
         """The main execution method of the chain."""
-        pass
+        raise NotImplementedError
 
-class Chain(BaseChain):
     @abstractmethod
-    def run(self, **kwargs: Any) -> Any:
-        """The main execution method of the chain."""
-        pass
+    async def arun(self, **kwargs: Any) -> Any:
+        raise NotImplementedError
