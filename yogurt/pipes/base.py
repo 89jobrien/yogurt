@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class BaseChain(ABC):
+class BasePipe(ABC):
     """Base interface for all chains."""
 
     @abstractmethod

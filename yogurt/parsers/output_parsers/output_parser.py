@@ -1,5 +1,8 @@
+import re
 from abc import abstractmethod
-from typing import Protocol, Any
+from typing import Protocol, Any, List
+from yogurt.messages.base import BaseMessage, HumanMessage, AIMessage, SystemMessage
+
 
 
 class BaseOutputParser(Protocol):
@@ -13,16 +16,33 @@ class BaseOutputParser(Protocol):
 
 
 class OutputParser:
-    def parse(self, text: str) -> Any:
+    def parse(self, text: str) -> List[BaseMessage]:
         """
-        Example implementation: simply returns the text uppercased.
-        Override this with real parsing logic as needed.
+        Parses text into a list of BaseMessage objects.
+        Expects messages like: '[role] content'
         """
-        return text.upper()
+        pattern = re.compile(r"^\[(human|ai|system)\]\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+        messages: List[BaseMessage] = []
+
+        role_to_cls = {
+            "human": HumanMessage,
+            "ai": AIMessage,
+            "system": SystemMessage,
+        }
+
+        for match in pattern.finditer(text):
+            role = match.group(1).lower()
+            content = match.group(2).strip()
+            cls = role_to_cls.get(role, BaseMessage)
+            messages.append(cls(content=content))
+
+        return messages
 
     def get_format_instructions(self) -> str:
-        """
-        Example implementation: instructs that input will be uppercased.
-        Override this with real instructions as needed.
-        """
-        return "Provide a string. The parser will return the string in uppercase."
+        return (
+            "Format messages with role names in brackets, e.g.:\n"
+            "[system] You are a helpful assistant.\n"
+            "[human] Hello!\n"
+            "[ai] Hi, how can I help you?\n"
+            "The parser will extract each message into its structured representation."
+        )

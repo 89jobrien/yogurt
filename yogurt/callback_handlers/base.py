@@ -1,12 +1,12 @@
 from abc import ABC
-from yogurt.chains.base import BaseChain
+from yogurt.pipes.base import BasePipe
 from yogurt.output.base import LLMResult
 
 
 class BaseCallbackHandler(ABC):
     """Base interface for callback handlers."""
 
-    def on_chain_start(self, chain: BaseChain, inputs: dict) -> None:
+    def on_chain_start(self, chain: BasePipe, inputs: dict) -> None:
         """Called when a chain starts."""
         pass
 

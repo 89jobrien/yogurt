@@ -10,7 +10,7 @@ Yogurt provides the essential, composable building blocks for creating applicati
 
 - **Type-Safe by Design**: Leverages Pydantic for all data models and configuration, ensuring that data flowing through your chains and components is always valid.
 
-- **Modular Components**: The framework is built on a set of clear interfaces (`BaseLLM`, `BaseChain`, etc.), allowing you to easily implement and swap out components.
+- **Modular Components**: The framework is built on a set of clear interfaces (`BaseLLM`, `BasePipe`, etc.), allowing you to easily implement and swap out components.
 
 - **Async & Streaming Native**: Built from the ground up with first-class support for async and streaming operations, making it suitable for high-performance, real-time applications.
 
@@ -104,8 +104,8 @@ These are wrappers around language models from various providers. The BaseLLM in
 #### Prompts
 Prompt templates manage the construction of prompts sent to LLMs. They allow for dynamic input and can be composed to handle complex prompting scenarios.
 
-#### Chains
-Chains are the core of the framework, allowing you to combine components (like prompts, LLMs, and parsers) into a single, executable sequence. The LLMChain is the most fundamental example.
+#### Pipes
+Pipes are the core of the framework, allowing you to combine components (like prompts, LLMs, and parsers) into a single, executable sequence. The LLMPipe is the most fundamental example.
 
 #### Output Models
 Yogurt uses explicit Pydantic models for LLM outputs to ensure clarity and type safety.

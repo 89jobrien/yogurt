@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
-from yogurt.embeddings.base import Embedding, Embeddings
+from typing import List, TypeAlias
+
+Embedding: TypeAlias = List[float]
+Embeddings: TypeAlias = List[Embedding]
 
 
 class BaseEmbedder(ABC):

@@ -3,8 +3,8 @@ from yogurt.memory.base import BaseMemory
 from yogurt.messages.base import BaseMessage, HumanMessage, AIMessage
 
 
-class ConversationBufferMemory(BaseMemory):
-    memory_key: str = "history"
+class ConversationMemory(BaseMemory):
+    memory_key: str = "conversation_memory"
     chat_history: List[BaseMessage] = []
 
     def load_memory_variables(self) -> Dict[str, Any]:

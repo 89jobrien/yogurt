@@ -1,12 +1,12 @@
 from typing import Any, List
 
-from yogurt.chains import BaseChain
+from yogurt.pipes import BasePipe
 from yogurt.llms import BaseLLM
-from yogurt.prompts.prompt_templates import BasePromptTemplate
+from yogurt.prompts.templates import BasePromptTemplate
 from yogurt.callback_handlers.base import BaseCallbackHandler
 
 
-class LLMChain(BaseChain):
+class LLMPipe(BasePipe):
     prompt: BasePromptTemplate
     llm: BaseLLM
     callbacks: List[BaseCallbackHandler] = []
