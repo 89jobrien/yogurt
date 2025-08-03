@@ -52,5 +52,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    # If your top-level script is async, you need to run it this way.
     asyncio.run(main())
