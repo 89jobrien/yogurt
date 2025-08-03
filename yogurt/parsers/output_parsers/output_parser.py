@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol, Any
 
+
 class BaseOutputParser(Protocol):
     @abstractmethod
     def parse(self, text: str) -> Any:
@@ -9,7 +10,8 @@ class BaseOutputParser(Protocol):
     @abstractmethod
     def get_format_instructions(self) -> str:
         pass
-    
+
+
 class OutputParser:
     def parse(self, text: str) -> Any:
         """
