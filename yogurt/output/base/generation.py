@@ -1,9 +1,14 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 from pydantic import BaseModel, Field
 
+
 class Generation(BaseModel):
-    """The output of one LLM generation."""
+    """
+    Represents a single, complete unit of generated text from an LLM.
+    This is typically the final output after a non-streaming call.
+    """
+
     text: str
-    """The generated text."""
+    """The generated text content."""
     generation_info: Dict[str, Any] = Field(default_factory=dict)
-    """Additional generation data, e.g., token usage, finish reason."""
+    """Any additional metadata from the LLM provider for this generation."""
