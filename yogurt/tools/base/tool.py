@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol, Any
 
+
 class BaseTool(Protocol):
     name: str
     description: str
