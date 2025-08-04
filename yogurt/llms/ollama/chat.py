@@ -26,7 +26,7 @@ class OllamaChat(BaseLLM):
             "options": {"temperature": self.temperature, **kwargs},
         }
 
-    def generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
+    def _generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         """Generates a chat completion using the /api/chat endpoint."""
         payload = self._build_chat_payload(prompt, stream=False, **kwargs)
         
@@ -44,7 +44,6 @@ class OllamaChat(BaseLLM):
         )
         return LLMResult(generations=[generation], llm_output=data)
 
-    # --- Override Optional Methods for Streaming ---
     def stream(self, prompt: PromptValue, **kwargs: Any) -> Iterator[StreamingChunk]:
         """Streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
@@ -54,10 +53,11 @@ class OllamaChat(BaseLLM):
                 for line in response.iter_lines():
                     if line:
                         chunk_data = json.loads(line)
+                        print(f"\n[RAW CHUNK]: {chunk_data}")
                         message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
                             text=message_chunk.get("content", ""),
-                            # metadata=chunk_data,
+                            metadata=chunk_data,
                         )
 
     async def agenerate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
@@ -85,6 +85,7 @@ class OllamaChat(BaseLLM):
                 async for line in response.aiter_lines():
                     if line:
                         chunk_data = json.loads(line)
+                        print(f"\n[RAW CHUNK]: {chunk_data}")
                         message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
                             text=message_chunk.get("content", ""),

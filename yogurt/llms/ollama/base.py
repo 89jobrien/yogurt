@@ -52,7 +52,7 @@ class OllamaLLM(BaseLLM):
             "options": {"temperature": self.temperature, **kwargs},
         }
 
-    def generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
+    def _generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         payload = self._build_payload(prompt, stream=False, **kwargs)
         with httpx.Client() as client:
             response = client.post(
@@ -64,44 +64,6 @@ class OllamaLLM(BaseLLM):
         generation = Generation(
             text=data.get("response", ""),
             metadata=data,
-        )
-        return LLMResult(generations=[generation], llm_output=data)
-
-    def generate_prompt(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
-        payload = self._build_payload(prompt, stream=False, **kwargs)
-        with httpx.Client() as client:
-            response = client.post(
-                f"{self.host}/api/generate", json=payload, timeout=120
-            )
-            response.raise_for_status()
-            data = response.json()
-
-        generation = Generation(
-            text=data.get("response", ""),
-            metadata=data,
-        )
-        return LLMResult(generations=[generation], llm_output=data)
-
-    def generate_chat_prompt(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
-        """Generates a chat completion."""
-        payload = self._build_chat_payload(prompt, stream=False, **kwargs)
-        
-        with httpx.Client() as client:
-            response = client.post(f"{self.host}/api/chat", json=payload, timeout=120)
-            response.raise_for_status()
-            data = response.json()
-
-        # The response from /api/chat is already a structured message
-        ai_message_data = data.get("message", {})
-        ai_message = AIMessage(
-            content=ai_message_data.get("content", ""),
-            # You could add other fields from `ai_message_data` if needed
-        )
-
-        generation = Generation(
-            # The 'text' is the content of the AIMessage
-            text=ai_message.content,
-            metadata=data, 
         )
         return LLMResult(generations=[generation], llm_output=data)
 
@@ -110,20 +72,28 @@ class OllamaLLM(BaseLLM):
         result = self.generate(prompt, **kwargs)
         return result.generations[0].text
 
-    def stream(self, prompt: PromptValue, **kwargs: Any) -> Iterator[StreamingChunk]:
+    def stream(self, prompt: PromptValue, **kwargs: Any):
         """Streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         with httpx.Client() as client:
-            with client.stream("POST", f"{self.host}/api/chat", json=payload, timeout=120) as response:
-                response.raise_for_status()
-                for line in response.iter_lines():
-                    if line:
-                        chunk_data = json.loads(line)
-                        message_chunk = chunk_data.get("message", {})
-                        yield StreamingChunk(
-                            text=message_chunk.get("content", ""),
-                            metadata=chunk_data,
-                        )
+            with client.stream("POST", url = f"{self.host}/api/generate", json=payload, timeout=120) as response:
+                for chunk in response.iter_lines():
+                    chunk_data = json.loads(chunk)
+                    print(f"\n[RAW CHUNK]: {chunk_data}")
+                    yield chunk_data
+                    # message_chunk = chunk_data.get("message", {})
+                    # yield StreamingChunk(
+                    #     text=message_chunk.get("content", ""),
+                    #     metadata=chunk_data,
+                    # )
+                # for line in response.iter_lines():
+                #     if line:
+                #         chunk_data = json.loads(line)
+                #         message_chunk = chunk_data.get("message", {})
+                #         yield StreamingChunk(
+                #             text=message_chunk.get("content", ""),
+                #             metadata=chunk_data,
+                #         )
 
     async def agenerate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         payload = self._build_payload(prompt, stream=False, **kwargs)

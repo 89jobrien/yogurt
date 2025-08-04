@@ -16,7 +16,7 @@ class BaseOutputParser(Protocol):
         pass
 
     @abstractmethod
-    def get_format_instructions(self) -> str:
+    def get_response_format(self) -> str:
         pass
 
 
@@ -47,7 +47,7 @@ class OutputParser:
     def parse_chunk(self, text: StreamingChunk) -> List[BaseMessage]:
         return self.parse(text.text)
 
-    def get_format_instructions(self) -> str:
+    def get_response_format(self) -> str:
         return (
             "Format messages with role names in brackets, e.g.:\n"
             "[system] You are a helpful assistant.\n"

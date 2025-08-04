@@ -20,19 +20,20 @@ class BaseLLM(BaseModel, ABC):
     temperature: float = Field(default=0.7, description="The sampling temperature.")
     model_name: str = "default-model"
     callbacks: list = Field(default_factory=list)
-
-    model_config = {
-        "arbitrary_types_allowed": True,
-    }
+    model_config = {"arbitrary_types_allowed": True}
 
     @abstractmethod
-    def generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
+    def _generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         """Core logic for model generation. Must be implemented by subclasses."""
         pass
 
     # def generate_prompt(self, prompt: PromptValue, **kwargs: Any):
     #     """Generates a response from a structured PromptValue."""
     #     pass
+
+    def generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
+        """Generates a response from a structured PromptValue."""
+        return self._generate(prompt, **kwargs)
 
     def invoke(self, input_str: str, **kwargs: Any) -> str:
         """Generates a response from a simple string input."""
