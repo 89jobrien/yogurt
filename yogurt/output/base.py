@@ -10,7 +10,7 @@ class Generation(BaseModel):
 
     text: str
     """The generated text content."""
-    generation_info: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
     """Any additional metadata from the LLM provider for this generation."""
 
 

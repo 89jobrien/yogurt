@@ -13,3 +13,11 @@ class BasePipe(ABC):
     @abstractmethod
     async def arun(self, **kwargs: Any) -> Any:
         raise NotImplementedError
+    
+    @abstractmethod
+    def stream(self, **kwargs: Any) -> Any:
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def astream(self, **kwargs: Any) -> Any:
+        raise NotImplementedError

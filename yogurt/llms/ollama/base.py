@@ -1,12 +1,13 @@
 import httpx
 import json
-from typing import Any, AsyncIterator, Iterator
+from typing import Any, AsyncIterator, Iterator, List, Optional
 
 from yogurt.llms.base import BaseLLM
 from yogurt.output.base import Generation, LLMResult
 from yogurt.output.streaming import StreamingChunk
 from yogurt.prompts.prompt_value import PromptValue
-from yogurt.messages.base import HumanMessage
+from yogurt.messages.base import HumanMessage, AIMessage
+from yogurt.callback_handlers.base import BaseCallbackHandler
 
 
 class OllamaLLM(BaseLLM):
@@ -20,6 +21,16 @@ class OllamaLLM(BaseLLM):
 
     host: str = "http://localhost:11434"
 
+    # def __init__(self, callbacks: Optional[List[BaseCallbackHandler]] = None, **data: Any):
+    #     super().__init__(**data)
+    #     self.callbacks = callbacks or []
+
+    def _invoke_callbacks(self, method_name: str, *args, **kwargs):
+        """Helper to invoke a method on all callback handlers."""
+        for handler in self.callbacks:
+            if hasattr(handler, method_name):
+                getattr(handler, method_name)(*args, **kwargs)
+
     def _build_payload(self, prompt: PromptValue, stream: bool, **kwargs: Any) -> dict:
         """Helper to construct the JSON payload for the Ollama API."""
         return {
@@ -28,8 +39,20 @@ class OllamaLLM(BaseLLM):
             "stream": stream,
             "options": {"temperature": self.temperature, **kwargs},
         }
+    
+    def _build_chat_payload(self, prompt: PromptValue, stream: bool, **kwargs: Any) -> dict:
+        """Helper to construct the JSON payload for the /api/chat endpoint."""
 
-    def _generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
+        messages = [msg.model_dump_json() for msg in prompt.to_messages()]
+
+        return {
+            "model": self.model_name,
+            "messages": messages,
+            "stream": stream,
+            "options": {"temperature": self.temperature, **kwargs},
+        }
+
+    def generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         payload = self._build_payload(prompt, stream=False, **kwargs)
         with httpx.Client() as client:
             response = client.post(
@@ -40,31 +63,66 @@ class OllamaLLM(BaseLLM):
 
         generation = Generation(
             text=data.get("response", ""),
-            generation_info=data,
+            metadata=data,
         )
         return LLMResult(generations=[generation], llm_output=data)
 
     def generate_prompt(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
-        return self._generate(prompt, **kwargs)
+        payload = self._build_payload(prompt, stream=False, **kwargs)
+        with httpx.Client() as client:
+            response = client.post(
+                f"{self.host}/api/generate", json=payload, timeout=120
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        generation = Generation(
+            text=data.get("response", ""),
+            metadata=data,
+        )
+        return LLMResult(generations=[generation], llm_output=data)
+
+    def generate_chat_prompt(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
+        """Generates a chat completion."""
+        payload = self._build_chat_payload(prompt, stream=False, **kwargs)
+        
+        with httpx.Client() as client:
+            response = client.post(f"{self.host}/api/chat", json=payload, timeout=120)
+            response.raise_for_status()
+            data = response.json()
+
+        # The response from /api/chat is already a structured message
+        ai_message_data = data.get("message", {})
+        ai_message = AIMessage(
+            content=ai_message_data.get("content", ""),
+            # You could add other fields from `ai_message_data` if needed
+        )
+
+        generation = Generation(
+            # The 'text' is the content of the AIMessage
+            text=ai_message.content,
+            metadata=data, 
+        )
+        return LLMResult(generations=[generation], llm_output=data)
 
     def invoke(self, input_str: str, **kwargs: Any) -> str:
         prompt = PromptValue(text=input_str, messages=[HumanMessage(content=input_str)])
-        result = self.generate_prompt(prompt, **kwargs)
+        result = self.generate(prompt, **kwargs)
         return result.generations[0].text
 
     def stream(self, prompt: PromptValue, **kwargs: Any) -> Iterator[StreamingChunk]:
-        payload = self._build_payload(prompt, stream=True, **kwargs)
+        """Streams a chat completion."""
+        payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         with httpx.Client() as client:
-            with client.stream(
-                "POST", f"{self.host}/api/generate", json=payload, timeout=120
-            ) as response:
+            with client.stream("POST", f"{self.host}/api/chat", json=payload, timeout=120) as response:
                 response.raise_for_status()
                 for line in response.iter_lines():
                     if line:
                         chunk_data = json.loads(line)
+                        message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
-                            text=chunk_data.get("response", ""),
-                            chunk_info=chunk_data,
+                            text=message_chunk.get("content", ""),
+                            metadata=chunk_data,
                         )
 
     async def agenerate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
@@ -78,7 +136,7 @@ class OllamaLLM(BaseLLM):
 
         generation = Generation(
             text=data.get("response", ""),
-            generation_info=data,
+            metadata=data,
         )
         return LLMResult(generations=[generation], llm_output=data)
 
@@ -90,10 +148,10 @@ class OllamaLLM(BaseLLM):
     async def astream(
         self, prompt: PromptValue, **kwargs: Any
     ) -> AsyncIterator[StreamingChunk]:
-        payload = self._build_payload(prompt, stream=True, **kwargs)
+        payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         async with httpx.AsyncClient() as client:
             async with client.stream(
-                "POST", f"{self.host}/api/generate", json=payload, timeout=120
+                "POST", f"{self.host}/api/chat", json=payload, timeout=120
             ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
@@ -101,5 +159,5 @@ class OllamaLLM(BaseLLM):
                         chunk_data = json.loads(line)
                         yield StreamingChunk(
                             text=chunk_data.get("response", ""),
-                            chunk_info=chunk_data,
+                            metadata=chunk_data,
                         )

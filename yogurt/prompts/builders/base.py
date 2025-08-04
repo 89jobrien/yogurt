@@ -3,8 +3,8 @@ from typing import Any
 from yogurt.prompts.prompt_value import PromptValue
 
 
-class BasePromptTemplate(ABC):
-    """Base interface for all prompt templates."""
+class BasePromptBuilder(ABC):
+    """Base interface for all prompt builders."""
 
     @abstractmethod
     def format_prompt(self, **kwargs: Any) -> PromptValue:
@@ -12,8 +12,8 @@ class BasePromptTemplate(ABC):
         pass
 
 
-class PromptTemplate(BasePromptTemplate):
-    """A simple prompt template that takes a single input and returns a PromptValue."""
+class PromptBuilder(BasePromptBuilder):
+    """A simple prompt builder that takes a single input and returns a PromptValue."""
 
     def __init__(self, template: str):
         self.template = template

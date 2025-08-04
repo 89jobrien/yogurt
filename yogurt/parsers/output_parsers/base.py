@@ -1,6 +1,7 @@
 import re
 from abc import abstractmethod
 from typing import Protocol, Any, List
+from yogurt.output.streaming import StreamingChunk
 from yogurt.messages.base import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
 
@@ -8,6 +9,10 @@ from yogurt.messages.base import BaseMessage, HumanMessage, AIMessage, SystemMes
 class BaseOutputParser(Protocol):
     @abstractmethod
     def parse(self, text: str) -> Any:
+        pass
+
+    @abstractmethod
+    def parse_chunk(self, text: StreamingChunk) -> Any:
         pass
 
     @abstractmethod
@@ -34,9 +39,13 @@ class OutputParser:
             role = match.group(1).lower()
             content = match.group(2).strip()
             cls = role_to_cls.get(role, BaseMessage)
-            messages.append(cls(content=content))
+            if cls:
+                messages.append(cls(content=content))
 
         return messages
+    
+    def parse_chunk(self, text: StreamingChunk) -> List[BaseMessage]:
+        return self.parse(text.text)
 
     def get_format_instructions(self) -> str:
         return (

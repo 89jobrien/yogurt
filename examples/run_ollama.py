@@ -19,11 +19,14 @@ async def main():
     print("Final Text:")
     print(final_generation.text)
     print("\nGeneration Info:")
+    final_nano = final_generation.metadata.get('total_duration')
+    if final_nano:
+        final_gen_secs = final_nano / 1_000_000_000
     # The 'generation_info' contains the full final response JSON from Ollama
     print(
-        f"  - Total duration: {final_generation.generation_info.get('total_duration')}"
+        f"  - Total duration: {final_gen_secs} seconds"
     )
-    print(f"  - Eval count: {final_generation.generation_info.get('eval_count')}")
+    print(f"  - Eval count: {final_generation.metadata.get('eval_count')}")
 
     # --- Streaming (Chunks Arrive Over Time) ---
     print("\n\n--- Running Streaming Generation ---")
@@ -41,13 +44,16 @@ async def main():
 
         # We can inspect the metadata of each chunk
         # Let's save the info from the last chunk, which has summary stats
-        if chunk.chunk_info.get("done"):
-            final_chunk_info = chunk.chunk_info
+        if chunk.metadata.get("done"):
+            final_chunk_info = chunk.metadata
 
     print("\n\nStreaming Complete!")
     print(f"Final assembled text has {len(full_response_text)} characters.")
     print("Info from final chunk:")
-    print(f"  - Total duration: {final_chunk_info.get('total_duration')}")
+    nano = final_chunk_info.get('total_duration')
+    if nano:
+        secs = nano / 1_000_000_000
+    print(f"  - Total duration: {secs} seconds")
     print(f"  - Eval count: {final_chunk_info.get('eval_count')}")
 
 

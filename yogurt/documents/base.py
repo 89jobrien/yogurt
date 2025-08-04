@@ -3,7 +3,8 @@ from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):
-    page_content: str
+    id: str
+    content: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 

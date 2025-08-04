@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -12,5 +12,12 @@ class StreamingChunk(BaseModel):
 
     text: str
     """The text content of this specific chunk."""
-    chunk_info: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
     """Any additional metadata provided by the LLM for this chunk."""
+
+
+class StreamingResponse(BaseModel):
+    chunks: List[StreamingChunk] = Field(default_factory=list)
+    complete: bool = False
+
+

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, TypeAlias
 from pydantic import BaseModel
 
 
@@ -6,7 +6,7 @@ class BaseMessage(BaseModel):
     """The base class for a message."""
 
     content: str
-    role: str  # 'human', 'ai', 'system'
+    role: str
 
     def __str__(self):
         return self.content
@@ -28,3 +28,6 @@ class SystemMessage(BaseMessage):
     """A system message that sets the context for the AI."""
 
     role: Literal["system"] = "system"
+
+
+AnyMessage: TypeAlias = HumanMessage | AIMessage | SystemMessage | BaseMessage
