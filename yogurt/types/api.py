@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional, Union, List
 from pydantic import BaseModel, Field
+from yogurt.types.json import JSONType
 
 
 class APIRequest(BaseModel):
@@ -17,8 +18,6 @@ class APIResponse(BaseModel):
 
 
 class JSONResponse(BaseModel):
-    from yogurt.types.json import JSONType
-
     status_code: int
     headers: Dict[str, str] = Field(default_factory=dict)
     json: JSONType

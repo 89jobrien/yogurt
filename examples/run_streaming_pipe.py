@@ -5,49 +5,53 @@ from yogurt.pipes.llm.llm_pipe import LLMPipe
 from yogurt.prompts.builders.chat import ChatPromptBuilder
 
 # Make sure you have this model pulled, e.g., `ollama pull qwen2:0.5b`
-MODEL_NAME = "gemma3:4b"
+MODEL_NAME = "qwen2.5-coder:0.5b"
 
 
 async def main():
-    """Demonstrates a pure streaming workflow where callbacks handle all output."""
+    """
+    Demonstrates a streaming workflow using the OllamaChat class, which is
+    the correct implementation for conversational, multi-message prompts.
+    """
 
     # 1. Instantiate both callback handlers
     stdout_handler = StdOutCBH()
     streaming_handler = StreamedStdOutCBH()
 
-    # 2. Instantiate the LLM
-    llm = OllamaChat(model_name=MODEL_NAME, temperature=0.3)
+    # 2. Instantiate the OllamaChat LLM
+    # We set temperature to 0.0 for more predictable, deterministic code generation.
+    llm = OllamaChat(model_name=MODEL_NAME, temperature=0.0)
 
-    # 3. Use the ChatPromptBuilder
+    # 3. Use the ChatPromptBuilder to create a structured list of messages
     chat_prompt = ChatPromptBuilder(
         system_msg=(
-            "You are a code generation bot. You will be given a task to write a "
-            "program in {language}. You must respond with ONLY the raw code for the "
-            "solution, and nothing else. Do not add any conversational text, "
-            "explanations, or markdown formatting."
+            "You are an expert Python code generation bot. "
+            "You must respond with ONLY the raw Python code for the requested function. "
+            "Do not provide any explanations, introductory text, or markdown formatting."
         ),
-        human_msg="{task}",
+        human_msg=(
+            "You are an expert Python code generation bot. "
+            "You must respond with ONLY the raw Python code for the requested function. "
+            "Do not provide any explanations, introductory text, or markdown formatting."
+            "Write a single Python function named `fibonacci` that takes one integer "
+            "argument `n` and returns the nth Fibonacci number."
+        ),
     )
 
-    # 4. Assemble the LLMPipe
+    # 4. Assemble the LLMPipe with the OllamaChat instance
     pipe = LLMPipe(
         prompt=chat_prompt, llm=llm, callbacks=[stdout_handler, streaming_handler]
     )
 
-    # 5. Run the stream and let the callbacks handle the output
-    print("\n--- Streaming Translation ---")
-    # print(chat_prompt)
+    # 5. Run the stream.
+    print(f"\n--- Generating code with {MODEL_NAME} using the /api/chat endpoint ---")
 
-    # We simply consume the async iterator to drive the stream.
-    # The `StreamedStdOutCBH` callback handles all the real-time printing.
-    async for _ in pipe.astream(
-        language="python",
-        task="Write the full code for a function that finds the nth fibonacci number",
-    ):
+    # The pipe will call llm.astream(), which correctly sends the messages
+    # to the /api/chat endpoint.
+    async for _ in pipe.astream():
         pass
 
-    # Add a final newline for clean formatting after the stream is done.
-    print()
+    print("\n\n--- Generation Complete ---")
 
 
 if __name__ == "__main__":
