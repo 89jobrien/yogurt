@@ -9,25 +9,25 @@ from yogurt.utils.colorize import print_text # Assuming colorize is in utils
 class StdOutCBH(BaseCallbackHandler):
     """A callback handler that prints to stdout for non-streaming events."""
 
-    def on_chain_start(self, chain: BasePipe, inputs: dict) -> None:
-        print_text(f"\n\n> Entering new chain: {chain.__class__.__name__}", "green")
+    def on_pipe_start(self, pipe: BasePipe, inputs: dict) -> None:
+        print_text(f">>> Entering new pipe: {pipe.__class__.__name__}\n\n", "green")
 
     def on_llm_start(self, serialized: dict, inputs: dict) -> None:
         prompt_value = inputs.get('prompt')
         prompt_text = "N/A"
         if isinstance(prompt_value, PromptValue):
             prompt_text = prompt_value.text
-        print_text(f"\n> Calling LLM with prompt:\n", "cyan")
+        print_text(f">>> Calling LLM\n\n", "cyan")
         print(prompt_text)
 
     def on_llm_end(self, response: LLMResult) -> None:
-        print_text(f"\n> LLM Finished.", "cyan")
+        print_text(f">>> LLM Finished\n\n", "cyan")
 
-    def on_chain_end(self, outputs: dict) -> None:
-        print_text(f"\n> Finished chain: {outputs.__class__.__name__}", "green")
+    def on_pipe_end(self, outputs: dict) -> None:
+        print_text(f"\n> Finished pipe", "green")
 
-    def on_chain_error(self, error: Exception) -> None:
-        print_text(f"\n> Chain Error: {error}", "red")
+    def on_pipe_error(self, error: Exception) -> None:
+        print_text(f"\n> Pipe Error: {error}", "red")
 
     def on_llm_error(self, error: Exception) -> None:
         print_text(f"\n> LLM Error: {error}", "red")
@@ -54,6 +54,6 @@ class StreamedStdOutCBH(BaseCallbackHandler):
         if chunk.text:
             print_text(chunk.text, self.stream_color, end="")
     
-        if chunk.metadata:
-            for key, value in chunk.metadata.items():
-                print_text(f"\n{key}: {value}", self.metadata_color, end="")
+        # if chunk.metadata:
+        #     for key, value in chunk.metadata.items():
+        #         print_text(f"\n{key}: {value}", self.metadata_color, end="")

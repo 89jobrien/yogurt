@@ -8,7 +8,7 @@ Yogurt provides the essential, composable building blocks for creating applicati
 
 ## Key Features
 
-- **Type-Safe by Design**: Leverages Pydantic for all data models and configuration, ensuring that data flowing through your chains and components is always valid.
+- **Type-Safe by Design**: Leverages Pydantic for all data models and configuration, ensuring that data flowing through your pipes and components is always valid.
 
 - **Modular Components**: The framework is built on a set of clear interfaces (`BaseLLM`, `BasePipe`, etc.), allowing you to easily implement and swap out components.
 
@@ -117,14 +117,14 @@ Represents the final, complete output from a non-streaming LLM call.
 Represents a single, discrete piece of a streaming response, containing both text and metadata.
 
 #### Memory
-Memory components give chains and agents the ability to remember past interactions, enabling stateful, conversational applications.
+Memory components give pipes and agents the ability to remember past interactions, enabling stateful, conversational applications.
 
 ## Roadmap
 
 Yogurt is under active development with the goal of providing a comprehensive, modular, and type-safe framework for building AI agents and language applications in Python. Our planned roadmap includes:
 
 - **v0.1 - Core Foundations**
-  - Define core interfaces and abstract base classes for LLMs, Chains, Agents, Tools, and Memory modules  
+  - Define core interfaces and abstract base classes for LLMs, Pipes, Agents, Tools, and Memory modules  
   - Build type-safe prompt templates with Pydantic validation
 
 - **v0.2 - Extensibility and Integrations**
@@ -134,7 +134,7 @@ Yogurt is under active development with the goal of providing a comprehensive, m
   - Improve memory modules to support long-term conversation context management
 
 - **v0.3 - Advanced Agent Capabilities**
-  - Develop autonomous decision-making agents capable of selecting tools and chains dynamically
+  - Develop autonomous decision-making agents capable of selecting tools and pipes dynamically
   - Support multi-agent collaboration and orchestration
   - Enhance async/streaming capabilities across the framework for high-performance real-time applications
   - Provide SDK enhancements for simplified development and deployment  

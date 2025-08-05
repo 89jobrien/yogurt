@@ -3,11 +3,11 @@ from typing import Any
 
 
 class BasePipe(ABC):
-    """Base interface for all chains."""
+    """Base interface for all pipes."""
 
     @abstractmethod
     def run(self, **kwargs: Any) -> Any:
-        """The main execution method of the chain."""
+        """The main execution method of the pipe."""
         raise NotImplementedError
 
     @abstractmethod

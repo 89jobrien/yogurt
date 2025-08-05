@@ -79,7 +79,7 @@ class OllamaLLM(BaseLLM):
             with client.stream("POST", url = f"{self.host}/api/generate", json=payload, timeout=120) as response:
                 for chunk in response.iter_lines():
                     chunk_data = json.loads(chunk)
-                    print(f"\n[RAW CHUNK]: {chunk_data}")
+                    # print(f"\n[RAW CHUNK]: {chunk_data}")
                     yield chunk_data
                     # message_chunk = chunk_data.get("message", {})
                     # yield StreamingChunk(
@@ -118,16 +118,20 @@ class OllamaLLM(BaseLLM):
     async def astream(
         self, prompt: PromptValue, **kwargs: Any
     ) -> AsyncIterator[StreamingChunk]:
+        """Asynchronously streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         async with httpx.AsyncClient() as client:
-            async with client.stream(
-                "POST", f"{self.host}/api/chat", json=payload, timeout=120
-            ) as response:
+            async with client.stream("POST", f"{self.host}/api/chat", json=payload, timeout=120) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line:
                         chunk_data = json.loads(line)
+                        
+                        # --- DEBUG ---
+                        # print(f"\n[RAW CHUNK]: {chunk_data}")
+                        
+                        message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
-                            text=chunk_data.get("response", ""),
+                            text=message_chunk.get("content", ""),
                             metadata=chunk_data,
                         )

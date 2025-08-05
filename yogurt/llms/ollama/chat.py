@@ -53,7 +53,7 @@ class OllamaChat(BaseLLM):
                 for line in response.iter_lines():
                     if line:
                         chunk_data = json.loads(line)
-                        print(f"\n[RAW CHUNK]: {chunk_data}")
+                        # print(f"\n[RAW CHUNK]: {chunk_data}")
                         message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
                             text=message_chunk.get("content", ""),
@@ -85,7 +85,7 @@ class OllamaChat(BaseLLM):
                 async for line in response.aiter_lines():
                     if line:
                         chunk_data = json.loads(line)
-                        print(f"\n[RAW CHUNK]: {chunk_data}")
+                        # print(f"\n[RAW CHUNK]: {chunk_data}")
                         message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
                             text=message_chunk.get("content", ""),

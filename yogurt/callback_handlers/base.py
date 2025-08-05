@@ -12,12 +12,12 @@ class BaseCallbackHandler(ABC):
         pass
 
     # --- Existing methods ---
-    def on_chain_start(self, chain: BasePipe, inputs: dict) -> None:
-        """Called when a chain starts."""
+    def on_pipe_start(self, pipe: BasePipe, inputs: dict) -> None:
+        """Called when a pipe starts."""
         pass
 
-    def on_chain_end(self, outputs: dict) -> None:
-        """Called when a chain ends."""
+    def on_pipe_end(self, outputs: dict) -> None:
+        """Called when a pipe ends."""
         pass
 
     def on_llm_start(self, serialized: dict, inputs: dict) -> None:
@@ -36,8 +36,8 @@ class BaseCallbackHandler(ABC):
         """Called when an LLM encounters an error."""
         pass
 
-    def on_chain_error(self, error: Exception) -> None:
-        """Called when a chain encounters an error."""
+    def on_pipe_error(self, error: Exception) -> None:
+        """Called when a pipe encounters an error."""
         pass
 
     def on_text(self, text: str) -> None:

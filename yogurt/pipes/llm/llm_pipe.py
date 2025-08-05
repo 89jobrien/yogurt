@@ -6,6 +6,8 @@ from yogurt.prompts.builders import BasePromptBuilder
 from yogurt.callback_handlers.base import BaseCallbackHandler
 from yogurt.parsers.output_parsers import OutputParser
 from yogurt.output.streaming import StreamingChunk
+from yogurt.output.base import LLMResult, Generation
+
 
 
 
@@ -53,7 +55,7 @@ class LLMPipe(BasePipe):
 
     def run(self, **kwargs: Any) -> Dict[str, Any]:
         for handler in self.callbacks:
-            handler.on_chain_start(self, inputs=kwargs)
+            handler.on_pipe_start(self, inputs=kwargs)
         try:
             prompt_value = self.prompt.format_prompt(**kwargs)
             for handler in self.callbacks:
@@ -67,9 +69,10 @@ class LLMPipe(BasePipe):
             output = self.output_parser.parse(raw_text) if self.output_parser else raw_text
             return {self.output_key: output}
         
+        
         except Exception as e:
             for handler in self.callbacks:
-                handler.on_chain_error(e)
+                handler.on_pipe_error(e)
             raise e
 
     async def arun(self, **kwargs: Any) -> Any:
@@ -77,7 +80,7 @@ class LLMPipe(BasePipe):
         Asynchronously runs the pipe and returns either raw text or parsed output.
         """
         for handler in self.callbacks:
-            handler.on_chain_start(self, inputs=kwargs)
+            handler.on_pipe_start(self, inputs=kwargs)
 
         try:
             prompt_value = self.prompt.format_prompt(**kwargs)
@@ -92,7 +95,7 @@ class LLMPipe(BasePipe):
 
         except Exception as e:
             for handler in self.callbacks:
-                handler.on_chain_error(e)
+                handler.on_pipe_error(e)
             raise e
         
     def predict(self, **kwargs: Any) -> Any:
@@ -104,7 +107,7 @@ class LLMPipe(BasePipe):
 
     def stream(self, **kwargs: Any) -> Iterator[StreamingChunk]:
         for handler in self.callbacks:
-            handler.on_chain_start(self, inputs=kwargs)
+            handler.on_pipe_start(self, inputs=kwargs)
         try:
             prompt_value = self.prompt.format_prompt(**kwargs)
             for handler in self.callbacks:
@@ -118,13 +121,15 @@ class LLMPipe(BasePipe):
 
         except Exception as e:
             for handler in self.callbacks:
-                handler.on_chain_error(e)
+                handler.on_pipe_error(e)
             raise e
         
     
     async def astream(self, **kwargs: Any) -> AsyncIterator[StreamingChunk]:
+        final_result_parts = []
+        final_chunk = None
         for handler in self.callbacks:
-            handler.on_chain_start(self, inputs=kwargs)
+            handler.on_pipe_start(self, inputs=kwargs)
 
         try:
             prompt_value = self.prompt.format_prompt(**kwargs)
@@ -132,11 +137,22 @@ class LLMPipe(BasePipe):
                 handler.on_llm_start(serialized={}, inputs={"prompt": prompt_value})
 
             async for chunk in self.llm.astream(prompt_value):
+                final_result_parts.append(chunk.text)
+                final_chunk = chunk 
                 for handler in self.callbacks:
                     handler.on_llm_stream(chunk)
                 yield chunk
 
+            final_text = "".join(final_result_parts)
+            if final_chunk:
+                final_generation = Generation(text=final_text, metadata=final_chunk.metadata)
+                llm_result = LLMResult(generations=[final_generation], llm_output=final_chunk.metadata)
+                for handler in self.callbacks:
+                    handler.on_llm_end(llm_result)
+            
+            for handler in self.callbacks:
+                handler.on_pipe_end(outputs={"result": final_text})
         except Exception as e:
             for handler in self.callbacks:
-                handler.on_chain_error(e)
+                handler.on_pipe_error(e)
             raise e
