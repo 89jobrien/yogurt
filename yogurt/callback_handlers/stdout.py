@@ -10,27 +10,27 @@ class StdOutCBH(BaseCallbackHandler):
     """A callback handler that prints to stdout for non-streaming events."""
 
     def on_pipe_start(self, pipe: BasePipe, inputs: dict) -> None:
-        print_text(f">>> Entering new pipe: {pipe.__class__.__name__}\n\n", "green")
+        print_text(f"\n>>> Entering new pipe: {pipe.__class__.__name__}\n", "green")
 
     def on_llm_start(self, serialized: dict, inputs: dict) -> None:
         prompt_value = inputs.get('prompt')
         prompt_text = "N/A"
         if isinstance(prompt_value, PromptValue):
             prompt_text = prompt_value.text
-        print_text(f">>> Calling LLM\n\n", "cyan")
+        print_text(f"\n>>> Calling LLM\n", "cyan")
         print(prompt_text)
 
     def on_llm_end(self, response: LLMResult) -> None:
-        print_text(f">>> LLM Finished\n\n", "cyan")
+        print_text(f"\n\n>>> LLM Finished\n", "cyan")
 
     def on_pipe_end(self, outputs: dict) -> None:
-        print_text(f"\n> Finished pipe", "green")
+        print_text(f"\n>>> Finished pipe\n", "green")
 
     def on_pipe_error(self, error: Exception) -> None:
-        print_text(f"\n> Pipe Error: {error}", "red")
+        print_text(f"\n>>> Pipe Error: {error}", "red")
 
     def on_llm_error(self, error: Exception) -> None:
-        print_text(f"\n> LLM Error: {error}", "red")
+        print_text(f"\n>>> LLM Error: {error}", "red")
 
     def on_text(self, text: str) -> None:
         print_text(text, "green")

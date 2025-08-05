@@ -1,54 +1,50 @@
 import asyncio
-from yogurt.llms.ollama import OllamaChat
+from yogurt.llms.ollama.chat import OllamaChat
 from yogurt.callback_handlers.stdout import StdOutCBH, StreamedStdOutCBH
 from yogurt.pipes.llm.llm_pipe import LLMPipe
 from yogurt.prompts.builders.chat import ChatPromptBuilder
-from yogurt.parsers.output_parsers.json import JsonResponseParser
 
-# Make sure you have this model pulled, e.g., `ollama pull llama3.2:3b`
-MODEL_NAME = "llama3.2:3b"
+# Make sure you have this model pulled, e.g., `ollama pull qwen2:0.5b`
+MODEL_NAME = "qwen2:0.5b"
 
 async def main():
-    """Demonstrates using astream and then parsing the final result."""
-    
-    # 1. Setup handlers and the JSON parser
+    """Demonstrates a pure streaming workflow where callbacks handle all output."""
+
+    # 1. Instantiate both callback handlers
     stdout_handler = StdOutCBH()
     streaming_handler = StreamedStdOutCBH()
-    json_parser = JsonResponseParser()
 
     # 2. Instantiate the LLM
-    llm = OllamaChat(model_name=MODEL_NAME, temperature=0.1)
+    llm = OllamaChat(model_name=MODEL_NAME, temperature=0.3)
 
-    # 3. Create a prompt with JSON formatting instructions
+    # 3. Use the ChatPromptBuilder
     chat_prompt = ChatPromptBuilder(
-        system_msg=f"You are a helpful assistant.",
-        human_msg="Create a short conversation about the user's topic: {topic}"
+        system_msg="You are a helpful assistant who translates English to {language}.",
+        human_msg="Translate this sentence: {sentence}"
     )
 
-    # 4. Assemble the pipe, but WITHOUT the parser initially
+    # 4. Assemble the LLMPipe
     pipe = LLMPipe(
         prompt=chat_prompt,
         llm=llm,
-        callbacks=[stdout_handler, streaming_handler],
-        # The output_parser is not passed to the pipe for streaming
+        callbacks=[stdout_handler, streaming_handler]
     )
 
-    # 5. Stream the response and collect the text
-    print("\n--- Streaming Raw Chunks ---")
+    # 5. Run the stream and let the callbacks handle the output
+    print("\n--- Streaming Translation ---")
+    print(chat_prompt)
 
-    async for chunk in pipe.astream(topic="learning to code"):
-        parsed_msgs = json_parser.parse_chunk(chunk)
-        for message in parsed_msgs:
-            print(f"\n[PARSED MESSAGE]: Role={message.role}, Content='{message.content}'")
+    # We simply consume the async iterator to drive the stream.
+    # The `StreamedStdOutCBH` callback handles all the real-time printing.
+    async for _ in pipe.astream(
+        language="French",
+        sentence="I love programming and building modular AI frameworks."
+    ):
+        pass
 
-    # # 6. Now, parse the complete text
-    # print("\n\n--- Parsing Final Assembled Text ---")
-    # parsed_result = json_parser.parse(final_raw_text)
+    # Add a final newline for clean formatting after the stream is done.
+    print()
 
-    # # 7. Print the final, structured result
-    # print("\n--- Final Parsed Output ---")
-    # for message in parsed_result:
-    #     print(f"  - Role: {message.role}, Content: '{message.content}'")
 
 if __name__ == "__main__":
     asyncio.run(main())
