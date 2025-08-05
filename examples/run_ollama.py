@@ -19,14 +19,13 @@ async def main():
     print("Final Text:")
     print(final_generation.text)
     print("\nGeneration Info:")
-    final_nano = final_generation.metadata.get('total_duration')
+    final_nano = final_generation.metadata.get("total_duration")
     if final_nano:
         final_gen_secs = final_nano / 1_000_000_000
     # The 'generation_info' contains the full final response JSON from Ollama
-    print(
-        f"  - Total duration: {final_gen_secs} seconds"
-    )
+    print(f"  - Total duration: {final_gen_secs} seconds")
     print(f"  - Eval count: {final_generation.metadata.get('eval_count')}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

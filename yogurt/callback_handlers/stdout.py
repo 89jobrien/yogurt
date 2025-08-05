@@ -3,7 +3,7 @@ from yogurt.output.base import LLMResult
 from yogurt.output.streaming import StreamingChunk
 from yogurt.pipes.base import BasePipe
 from yogurt.prompts.prompt_value import PromptValue
-from yogurt.utils.colorize import print_text # Assuming colorize is in utils
+from yogurt.utils.colorize import print_text  # Assuming colorize is in utils
 
 
 class StdOutCBH(BaseCallbackHandler):
@@ -13,12 +13,28 @@ class StdOutCBH(BaseCallbackHandler):
         print_text(f"\n>>> Entering new pipe: {pipe.__class__.__name__}\n", "green")
 
     def on_llm_start(self, serialized: dict, inputs: dict) -> None:
-        prompt_value = inputs.get('prompt')
-        prompt_text = "N/A"
+        prompt_value = inputs.get("prompt")
+        print_text(f"\n> Calling LLM with prompt:\n", "cyan")
+
         if isinstance(prompt_value, PromptValue):
-            prompt_text = prompt_value.text
-        print_text(f"\n>>> Calling LLM\n", "cyan")
-        print(prompt_text)
+            if prompt_value.messages:
+                # For chat prompts, print each message's role and content
+                for msg in prompt_value.to_messages():
+                    print(f"  Role: {msg.role}")
+                    print(f"  Content: {msg.content}")
+            else:
+                # Fallback for text-based prompts
+                print(prompt_value.text)
+        else:
+            print("N/A")
+
+    # def on_llm_start(self, serialized: dict, inputs: dict) -> None:
+    #     prompt_value = inputs.get('prompt')
+    #     prompt_text = "N/A"
+    #     if isinstance(prompt_value, PromptValue):
+    #         prompt_text = prompt_value.text
+    #     print_text(f"\n>>> Calling LLM\n", "cyan")
+    #     print(prompt_text)
 
     def on_llm_end(self, response: LLMResult) -> None:
         print_text(f"\n\n>>> LLM Finished\n", "cyan")
@@ -53,7 +69,7 @@ class StreamedStdOutCBH(BaseCallbackHandler):
         """
         if chunk.text:
             print_text(chunk.text, self.stream_color, end="")
-    
+
         # if chunk.metadata:
         #     for key, value in chunk.metadata.items():
         #         print_text(f"\n{key}: {value}", self.metadata_color, end="")

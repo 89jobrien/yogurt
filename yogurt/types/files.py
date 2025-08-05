@@ -8,7 +8,9 @@ Timestamp: TypeAlias = datetime
 
 # Common file extensions as type aliases
 TextFileExtension: TypeAlias = Literal[".txt", ".md", ".csv", ".json"]
-ImageFileExtension: TypeAlias = Literal[".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]
+ImageFileExtension: TypeAlias = Literal[
+    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"
+]
 PDFFileExtension: TypeAlias = Literal[".pdf"]
 AudioFileExtension: TypeAlias = Literal[".mp3", ".wav", ".ogg", ".flac"]
 VideoFileExtension: TypeAlias = Literal[".mp4", ".mov", ".avi", ".mkv"]
@@ -91,7 +93,9 @@ class CSVFile(BaseModel):
 
 class XLSXFile(BaseModel):
     path: FilePath
-    sheets: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)  # Sheet Name -> rows
+    sheets: Dict[str, List[Dict[str, Any]]] = Field(
+        default_factory=dict
+    )  # Sheet Name -> rows
     metadata: Optional[FileMetadata] = None
 
 
@@ -164,4 +168,3 @@ ConfigFile = Union[YAMLFile, TOMLFile]
 MimeType: TypeAlias = str  # e.g. "text/plain", "application/pdf", "image/png"
 YAMLMimeType: TypeAlias = Literal["application/x-yaml", "text/yaml"]
 TOMLMimeType: TypeAlias = Literal["application/toml", "text/toml"]
-

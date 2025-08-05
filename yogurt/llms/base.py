@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, Iterator
+from typing import Any, AsyncIterator, Iterator, List
 from pydantic import Field, BaseModel, field_validator
 
 from yogurt.messages.base import HumanMessage
 from yogurt.output.streaming import StreamingChunk
 from yogurt.output.base import LLMResult
 from yogurt.prompts.prompt_value import PromptValue
+from yogurt.callback_handlers.base import BaseCallbackHandler
 
 
 class BaseLLM(BaseModel, ABC):
@@ -19,7 +20,7 @@ class BaseLLM(BaseModel, ABC):
 
     temperature: float = Field(default=0.7, description="The sampling temperature.")
     model_name: str = "default-model"
-    callbacks: list = Field(default_factory=list)
+    callbacks: List[BaseCallbackHandler] = Field(default_factory=list, exclude=True)
     model_config = {"arbitrary_types_allowed": True}
 
     @abstractmethod
@@ -44,11 +45,15 @@ class BaseLLM(BaseModel, ABC):
     # --- Optional methods that subclasses CAN implement ---
     def stream(self, prompt: PromptValue, **kwargs: Any) -> Iterator[StreamingChunk]:
         """Streams response chunks. Raises error if not implemented."""
-        raise NotImplementedError(f"{self.__class__.__name__} does not support streaming.")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support streaming."
+        )
 
     async def agenerate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         """Asynchronously generates a response. Raises error if not implemented."""
-        raise NotImplementedError(f"{self.__class__.__name__} does not support async generation.")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support async generation."
+        )
 
     async def ainvoke(self, input_str: str, **kwargs: Any) -> str:
         """Asynchronously generates a response from a string."""
@@ -60,7 +65,9 @@ class BaseLLM(BaseModel, ABC):
         self, prompt: PromptValue, **kwargs: Any
     ) -> AsyncIterator[StreamingChunk]:
         """Asynchronously streams response chunks. Raises error if not implemented."""
-        raise NotImplementedError(f"{self.__class__.__name__} does not support async streaming.")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support async streaming."
+        )
         yield
 
     @field_validator("temperature")

@@ -19,5 +19,3 @@ class StreamingChunk(BaseModel):
 class StreamingResponse(BaseModel):
     chunks: List[StreamingChunk] = Field(default_factory=list)
     complete: bool = False
-
-

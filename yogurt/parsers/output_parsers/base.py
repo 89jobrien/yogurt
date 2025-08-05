@@ -5,7 +5,6 @@ from yogurt.output.streaming import StreamingChunk
 from yogurt.messages.base import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
 
-
 class BaseOutputParser(Protocol):
     @abstractmethod
     def parse(self, text: str) -> Any:
@@ -26,7 +25,9 @@ class OutputParser:
         Parses text into a list of BaseMessage objects.
         Expects messages like: '[role] content'
         """
-        pattern = re.compile(r"^\[(human|ai|system)\]\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+        pattern = re.compile(
+            r"^\[(human|ai|system)\]\s*(.+)$", re.MULTILINE | re.IGNORECASE
+        )
         messages: List[BaseMessage] = []
 
         role_to_cls = {
@@ -43,7 +44,7 @@ class OutputParser:
                 messages.append(cls(content=content))
 
         return messages
-    
+
     def parse_chunk(self, text: StreamingChunk) -> List[BaseMessage]:
         return self.parse(text.text)
 

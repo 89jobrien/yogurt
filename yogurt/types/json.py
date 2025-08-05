@@ -6,6 +6,6 @@ JSONType = Union[JSONPrimitive, Dict[str, Any], List[Any]]
 # For stricter, recursive types:
 JSON = Union[
     JSONPrimitive,
-    List["JSON"],     # type: ignore  # recursive definition for Mypy
-    Dict[str, "JSON"] # type: ignore
+    List["JSON"],  # type: ignore  # recursive definition for Mypy
+    Dict[str, "JSON"],  # type: ignore
 ]

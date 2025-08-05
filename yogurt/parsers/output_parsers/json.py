@@ -8,6 +8,7 @@ from yogurt.parsers.output_parsers.base import BaseOutputParser
 from yogurt.messages.base import SystemMessage, HumanMessage, AIMessage, BaseMessage
 from yogurt.utils.json_parsing import parse_json_markdown, parse_partial_json
 
+
 class JsonResponseParser(BaseOutputParser):
     """
     Parses a JSON string from an LLM into a list of Message objects.
@@ -28,35 +29,35 @@ class JsonResponseParser(BaseOutputParser):
             return []
 
         return self._parse_json_to_messages(parsed_json)
-    
+
     def parse_streaming_chunk(self, chunk: StreamingChunk) -> Any:
         """
         Accumulates text from a chunk and parses the buffer to find
         any new, complete messages.
         """
         self.buffer += chunk.text
-        
+
         parsed_json = parse_partial_json(self.buffer)
-        
+
         # Attempt to parse the current buffer as partial JSON
         parsed_json = parse_partial_json(self.buffer)
-        
+
         if parsed_json is None or "conversation" not in parsed_json:
             return []
-        
+
         all_messages = self._parse_json_to_messages(parsed_json)
-        
+
         # Check if we have found more complete messages than we've already yielded
         if len(all_messages) > self.parsed_message_count:
-            new_messages = all_messages[self.parsed_message_count:]
+            new_messages = all_messages[self.parsed_message_count :]
             self.parsed_message_count = len(all_messages)
             return new_messages
-        
+
         return []
-    
+
     def parse(self, text: str) -> List[BaseMessage]:
         return self.parse_response(text)
-    
+
     def parse_chunk(self, text: StreamingChunk) -> Any:
         return self.parse_streaming_chunk(text)
 
@@ -76,7 +77,7 @@ class JsonResponseParser(BaseOutputParser):
 
             if cls and content is not None:
                 messages.append(cls(content=content))
-        
+
         return messages
 
     def get_response_format(self) -> str:

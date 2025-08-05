@@ -31,7 +31,6 @@ _TEXT_COLOR_MAPPING = {
 }
 
 
-
 def get_color_mapping(
     items: list[str], excluded_colors: Optional[list] = None
 ) -> dict[str, str]:

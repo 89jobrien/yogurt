@@ -39,8 +39,10 @@ class OllamaLLM(BaseLLM):
             "stream": stream,
             "options": {"temperature": self.temperature, **kwargs},
         }
-    
-    def _build_chat_payload(self, prompt: PromptValue, stream: bool, **kwargs: Any) -> dict:
+
+    def _build_chat_payload(
+        self, prompt: PromptValue, stream: bool, **kwargs: Any
+    ) -> dict:
         """Helper to construct the JSON payload for the /api/chat endpoint."""
 
         messages = [msg.model_dump_json() for msg in prompt.to_messages()]
@@ -76,7 +78,9 @@ class OllamaLLM(BaseLLM):
         """Streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         with httpx.Client() as client:
-            with client.stream("POST", url = f"{self.host}/api/generate", json=payload, timeout=120) as response:
+            with client.stream(
+                "POST", url=f"{self.host}/api/generate", json=payload, timeout=120
+            ) as response:
                 for chunk in response.iter_lines():
                     chunk_data = json.loads(chunk)
                     # print(f"\n[RAW CHUNK]: {chunk_data}")
@@ -121,15 +125,17 @@ class OllamaLLM(BaseLLM):
         """Asynchronously streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         async with httpx.AsyncClient() as client:
-            async with client.stream("POST", f"{self.host}/api/chat", json=payload, timeout=120) as response:
+            async with client.stream(
+                "POST", f"{self.host}/api/chat", json=payload, timeout=120
+            ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line:
                         chunk_data = json.loads(line)
-                        
+
                         # --- DEBUG ---
                         # print(f"\n[RAW CHUNK]: {chunk_data}")
-                        
+
                         message_chunk = chunk_data.get("message", {})
                         yield StreamingChunk(
                             text=message_chunk.get("content", ""),

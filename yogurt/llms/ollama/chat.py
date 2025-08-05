@@ -1,6 +1,6 @@
 import httpx
 import json
-from typing import Any, AsyncIterator, Iterator
+from typing import Any, AsyncIterator, Iterator, List, Optional
 
 # Use the consolidated BaseLLM
 from yogurt.llms.base import BaseLLM
@@ -8,28 +8,45 @@ from yogurt.output.base import Generation, LLMResult
 from yogurt.output.streaming import StreamingChunk
 from yogurt.prompts.prompt_value import PromptValue
 from yogurt.messages.base import AIMessage
+from yogurt.tools.base import BaseTool
+
 
 class OllamaChat(BaseLLM):
     """
     An LLM class that integrates with the Ollama service using the /api/chat endpoint.
     """
+
     host: str = "http://localhost:11434"
 
-    def _build_chat_payload(self, prompt: PromptValue, stream: bool, **kwargs: Any) -> dict:
+    def _build_chat_payload(
+        self, 
+        prompt: PromptValue, 
+        stream: bool, 
+        tools: Optional[List[BaseTool]] = None,
+        **kwargs: Any
+    ) -> dict:
         """Helper to construct the JSON payload for the /api/chat endpoint."""
         messages = [msg.model_dump() for msg in prompt.to_messages()]
 
-        return {
+        payload = {
             "model": self.model_name,
             "messages": messages,
             "stream": stream,
             "options": {"temperature": self.temperature, **kwargs},
         }
 
+        if tools:
+            payload["tools"] = [tool.get_schema() for tool in tools]
+            
+        print("\n--- Sending Payload to Ollama ---")
+        print(json.dumps(payload, indent=2))
+        print("---------------------------------")
+        return payload
+
     def _generate(self, prompt: PromptValue, **kwargs: Any) -> LLMResult:
         """Generates a chat completion using the /api/chat endpoint."""
         payload = self._build_chat_payload(prompt, stream=False, **kwargs)
-        
+
         with httpx.Client() as client:
             response = client.post(f"{self.host}/api/chat", json=payload, timeout=120)
             response.raise_for_status()
@@ -40,7 +57,7 @@ class OllamaChat(BaseLLM):
 
         generation = Generation(
             text=ai_message.content,
-            metadata=data, 
+            metadata=data,
         )
         return LLMResult(generations=[generation], llm_output=data)
 
@@ -48,7 +65,9 @@ class OllamaChat(BaseLLM):
         """Streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         with httpx.Client() as client:
-            with client.stream("POST", f"{self.host}/api/chat", json=payload, timeout=120) as response:
+            with client.stream(
+                "POST", f"{self.host}/api/chat", json=payload, timeout=120
+            ) as response:
                 response.raise_for_status()
                 for line in response.iter_lines():
                     if line:
@@ -64,13 +83,15 @@ class OllamaChat(BaseLLM):
         """Asynchronously generates a chat completion."""
         payload = self._build_chat_payload(prompt, stream=False, **kwargs)
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{self.host}/api/chat", json=payload, timeout=120)
+            response = await client.post(
+                f"{self.host}/api/chat", json=payload, timeout=120
+            )
             response.raise_for_status()
             data = response.json()
-        
+
         ai_message_data = data.get("message", {})
         ai_message = AIMessage(content=ai_message_data.get("content", ""))
-        
+
         generation = Generation(text=ai_message.content, metadata=data)
         return LLMResult(generations=[generation], llm_output=data)
 
@@ -80,7 +101,9 @@ class OllamaChat(BaseLLM):
         """Asynchronously streams a chat completion."""
         payload = self._build_chat_payload(prompt, stream=True, **kwargs)
         async with httpx.AsyncClient() as client:
-            async with client.stream("POST", f"{self.host}/api/chat", json=payload, timeout=120) as response:
+            async with client.stream(
+                "POST", f"{self.host}/api/chat", json=payload, timeout=120
+            ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line:

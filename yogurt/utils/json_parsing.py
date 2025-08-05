@@ -2,6 +2,7 @@ import json
 import re
 from typing import Any, Callable
 
+
 def _replace_newline(match: re.Match[str]) -> str:
     """Replaces unescaped newlines, tabs, and quotes in a string."""
     value = match.group(2)
@@ -10,6 +11,7 @@ def _replace_newline(match: re.Match[str]) -> str:
     value = re.sub(r"\t", r"\\t", value)
     value = re.sub(r'(?<!\\)"', r'\\"', value)
     return match.group(1) + value + match.group(3)
+
 
 def _custom_parser(multiline_string: str) -> str:
     """
@@ -25,6 +27,7 @@ def _custom_parser(multiline_string: str) -> str:
         multiline_string,
         flags=re.DOTALL,
     )
+
 
 def parse_partial_json(s: str, *, strict: bool = False) -> Any:
     """
@@ -78,10 +81,13 @@ def parse_partial_json(s: str, *, strict: bool = False) -> Any:
             return json.loads("".join(new_chars + stack), strict=strict)
         except json.JSONDecodeError:
             new_chars.pop()
-            
-    return None # Return None if parsing fails completely
 
-def parse_json_markdown(json_string: str, *, parser: Callable[[str], Any] = parse_partial_json) -> dict:
+    return None  # Return None if parsing fails completely
+
+
+def parse_json_markdown(
+    json_string: str, *, parser: Callable[[str], Any] = parse_partial_json
+) -> dict:
     """
     Parses a JSON string from a Markdown string, cleaning it up and
     handling partial JSON.

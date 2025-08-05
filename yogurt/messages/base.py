@@ -1,5 +1,6 @@
-from typing import Literal, TypeAlias
+from typing import Literal, TypeAlias, List, Optional
 from pydantic import BaseModel
+from yogurt.agents.models import ToolCall
 
 
 class BaseMessage(BaseModel):
@@ -22,6 +23,7 @@ class AIMessage(BaseMessage):
     """A message from the AI."""
 
     role: Literal["ai"] = "ai"
+    tool_calls: Optional[List[ToolCall]] = None
 
 
 class SystemMessage(BaseMessage):

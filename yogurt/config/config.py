@@ -1,11 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 
+
 class LLMConfig(BaseModel):
     model_name: str
     temperature: float = 0.7
     max_tokens: Optional[int] = None
     stop_sequences: Optional[List[str]] = None
+
 
 class YogurtSettings(BaseModel):
     log_level: str = "INFO"

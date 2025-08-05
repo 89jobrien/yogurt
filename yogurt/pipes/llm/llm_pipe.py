@@ -9,8 +9,6 @@ from yogurt.output.streaming import StreamingChunk
 from yogurt.output.base import LLMResult, Generation
 
 
-
-
 class LLMPipe(BasePipe):
     """
     A pipe that handles the full flow from prompt to structured output:
@@ -19,6 +17,7 @@ class LLMPipe(BasePipe):
     3. If an output_parser is provided, it parses the raw text into a
        structured format. Otherwise, it returns the raw text.
     """
+
     prompt: BasePromptBuilder
     llm: BaseLLM
     output_parser: Optional[OutputParser] = None
@@ -39,19 +38,17 @@ class LLMPipe(BasePipe):
         self.output_parser = output_parser
         self.output_key = output_key
 
-
     @property
     def input_keys(self) -> List[str]:
         """Input keys are determined by the prompt's input variables."""
         # Assuming the prompt builder has an 'input_variables' attribute.
         # This would need to be added to your BasePromptBuilder.
-        return getattr(self.prompt, 'input_variables', [])
-    
+        return getattr(self.prompt, "input_variables", [])
+
     @property
     def output_keys(self) -> List[str]:
         """The single output key for this pipe."""
         return [self.output_key]
-    
 
     def run(self, **kwargs: Any) -> Dict[str, Any]:
         for handler in self.callbacks:
@@ -66,10 +63,11 @@ class LLMPipe(BasePipe):
             for handler in self.callbacks:
                 handler.on_llm_end(response)
 
-            output = self.output_parser.parse(raw_text) if self.output_parser else raw_text
+            output = (
+                self.output_parser.parse(raw_text) if self.output_parser else raw_text
+            )
             return {self.output_key: output}
-        
-        
+
         except Exception as e:
             for handler in self.callbacks:
                 handler.on_pipe_error(e)
@@ -90,17 +88,19 @@ class LLMPipe(BasePipe):
             for handler in self.callbacks:
                 handler.on_llm_end(response)
 
-            output = self.output_parser.parse(raw_text) if self.output_parser else raw_text
+            output = (
+                self.output_parser.parse(raw_text) if self.output_parser else raw_text
+            )
             return {self.output_key: output}
 
         except Exception as e:
             for handler in self.callbacks:
                 handler.on_pipe_error(e)
             raise e
-        
+
     def predict(self, **kwargs: Any) -> Any:
         return self.run(**kwargs)[self.output_key]
-    
+
     async def apredict(self, **kwargs: Any) -> Any:
         result = await self.arun(**kwargs)
         return result[self.output_key]
@@ -113,7 +113,6 @@ class LLMPipe(BasePipe):
             for handler in self.callbacks:
                 handler.on_llm_start(serialized={}, inputs={"prompt": prompt_value})
 
-
             for chunk in self.llm.stream(prompt_value):
                 for handler in self.callbacks:
                     handler.on_llm_stream(chunk)
@@ -123,8 +122,7 @@ class LLMPipe(BasePipe):
             for handler in self.callbacks:
                 handler.on_pipe_error(e)
             raise e
-        
-    
+
     async def astream(self, **kwargs: Any) -> AsyncIterator[StreamingChunk]:
         final_result_parts = []
         final_chunk = None
@@ -138,18 +136,22 @@ class LLMPipe(BasePipe):
 
             async for chunk in self.llm.astream(prompt_value):
                 final_result_parts.append(chunk.text)
-                final_chunk = chunk 
+                final_chunk = chunk
                 for handler in self.callbacks:
                     handler.on_llm_stream(chunk)
                 yield chunk
 
             final_text = "".join(final_result_parts)
             if final_chunk:
-                final_generation = Generation(text=final_text, metadata=final_chunk.metadata)
-                llm_result = LLMResult(generations=[final_generation], llm_output=final_chunk.metadata)
+                final_generation = Generation(
+                    text=final_text, metadata=final_chunk.metadata
+                )
+                llm_result = LLMResult(
+                    generations=[final_generation], llm_output=final_chunk.metadata
+                )
                 for handler in self.callbacks:
                     handler.on_llm_end(llm_result)
-            
+
             for handler in self.callbacks:
                 handler.on_pipe_end(outputs={"result": final_text})
         except Exception as e:
