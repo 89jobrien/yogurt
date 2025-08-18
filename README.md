@@ -2,7 +2,7 @@
 
 ## [Under Construction]
 
-A fresh, type-safe, and modular AI framework for building powerful language applications in Python.
+A type-safe-ish, modular AI framework for building LLM applications in Python.
 
 Yogurt provides the essential, composable building blocks for creating applications with LLMs. It is designed with a strong emphasis on developer experience, using modern Python features and robust type-safety to make your code predictable, reliable, and easy to extend.
 
